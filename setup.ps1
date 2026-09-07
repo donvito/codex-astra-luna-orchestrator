@@ -270,7 +270,7 @@ try {
 
     $installed = 0
     foreach ($component in '.codex', '.agents', 'AGENTS.md') {
-        if (Read-Confirmation -Prompt "Install $component?" -DefaultYes $true) {
+        if (Read-Confirmation -Prompt "Install ${component}?" -DefaultYes $true) {
             if (Install-Component -Name $component -TargetDirectory $targetDirectory) {
                 $installed++
             }
