@@ -82,6 +82,8 @@ def thread_role(meta: dict) -> tuple[str, str]:
     source = meta.get("source")
     if isinstance(source, dict):
         sub = source.get("subagent") or {}
+        if isinstance(sub, str):
+            return sub, ""
         spawn = sub.get("thread_spawn")
         if isinstance(spawn, dict):
             return spawn.get("agent_role") or "subagent", spawn.get("agent_nickname") or ""
