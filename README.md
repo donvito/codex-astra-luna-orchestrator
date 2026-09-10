@@ -2,7 +2,7 @@
 
 A configurable Codex setup where GPT-6 Astra is the root/orchestrator and reviewer, while GPT-5.6 Luna is the default and pinned model for execution subagents.
 
-The installer asks which Codex plan you are on. Pro installs the Astra root described above. Plus installs a variant where the root is GPT-5.6 Luna at max reasoning, which keeps orchestrated sessions within the Plus rate-limit windows. Subagent roles are identical on both plans, including the reviewer, which stays on GPT-6 Astra so the final review is always done by a different model than the one that wrote the code.
+The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium reasoning to orchestrate and GPT-5.6 Luna at max reasoning for execution subagents. Plus uses GPT-5.6 Luna at max reasoning to orchestrate and medium reasoning for execution subagents. Both plans retain the separate GPT-6 Astra reviewer at low reasoning.
 
 ## Layout
 
@@ -36,13 +36,40 @@ The installer asks which Codex plan you are on. Pro installs the Astra root desc
 └── LICENSE
 ```
 
-## Main configuration knobs
+## Current Plus and Pro configuration
 
-Edit `.codex/config.toml`:
+| Role or setting | Plus | Pro |
+|---|---|---|
+| Orchestrator | GPT-5.6 Luna — max | GPT-6 Astra — medium |
+| Explorer, worker, tester, researcher | GPT-5.6 Luna — medium | GPT-5.6 Luna — max |
+| Default subagent | GPT-5.6 Luna — medium | GPT-5.6 Luna — max |
+| Independent reviewer | GPT-6 Astra — low | GPT-6 Astra — low |
+| Concurrent subagent limit | 4 | 4 |
+
+### Pro — `.codex/config.toml`
 
 ```toml
 model = "gpt-6-astra"
-model_reasoning_effort = "low"
+model_reasoning_effort = "medium"
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 4
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "max"
+```
+
+### Plus — `.codex/config.plus.toml`
+
+```toml
+model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
 
 [agents]
 enabled = true
@@ -51,21 +78,16 @@ default_subagent_model = "gpt-5.6-luna"
 default_subagent_reasoning_effort = "medium"
 ```
 
-`.codex/config.plus.toml` is the same file with a Luna root:
-
-```toml
-model = "gpt-5.6-luna"
-model_reasoning_effort = "max"
-```
-
 The installer writes whichever one matches your plan to `.codex/config.toml`
 in the target repository; `config.plus.toml` itself is never installed.
 
 Each role file is explicitly pinned to its intended model: Luna for explorer, worker, tester, and researcher; Astra for reviewer. This means changing only `default_subagent_model` will affect generic spawned agents, but not the named roles.
 
-If you want one knob to control all subagents, remove the `model` and `model_reasoning_effort` overrides from each `.codex/agents/*.toml` file.
+The four Luna role files omit `model_reasoning_effort`, so they use the selected plan's `default_subagent_reasoning_effort` unless the spawn request explicitly sets an effort. The reviewer keeps its explicit `low` effort. See the [official subagent configuration documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents) for precedence rules.
 
-Then the named roles inherit the `[agents]` defaults.
+When updating an existing installation, update the four Luna role files along with `config.toml`; an older role file pinned to `medium` will override Pro's new `max` default.
+
+If you want all named roles, including the reviewer, to follow the `[agents]` defaults, remove both the `model` and `model_reasoning_effort` overrides from their role files.
 
 ## Project setup
 
@@ -119,9 +141,10 @@ Codex plan:
 Select plan [1/2] (default 1):
 ```
 
-This only affects which root configuration is written to `.codex/config.toml`.
-Agent role files are the same on both plans: explorer, worker, tester, and
-researcher run on Luna; the reviewer runs on Astra on Plus as well.
+The selected configuration sets both the root and default subagent reasoning.
+Agent role files are shared between plans: explorer, worker, tester, and
+researcher use Luna at the plan's default effort; the reviewer uses Astra at low
+effort on both plans.
 
 The installer then asks whether to install each component:
 
@@ -224,13 +247,13 @@ and reviewer for an independent final review.
 ## Tuning
 
 For cheaper/faster runs:
-- set Astra reasoning to `medium`
+- lower Pro's Astra reasoning from `medium` to `low`
 - set Luna reasoning to `low` or `medium`
 - use 3-4 concurrent threads
 
 For larger codebases:
-- keep Astra at `high`
-- keep Luna at `medium`
+- consider raising Pro's Astra reasoning to `high`
+- start with your plan's Luna default and adjust based on results
 - use 6-8 concurrent threads, only when tasks are actually independent
 
 For strict parent/child separation:
