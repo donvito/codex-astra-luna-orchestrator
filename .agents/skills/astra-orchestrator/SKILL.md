@@ -34,26 +34,44 @@ Do not override a Luna subagent to a more expensive model unless the user explic
 
 ## Delegation gate
 
-Before doing substantive repository work, classify the task as either:
+Before doing substantive repository work, classify the task into one of three tiers:
 
-- root-only
-- delegated
+### Tier 1 — Root-only
 
-Use root-only only when the task is genuinely small, localized, and does not materially benefit from independent exploration, implementation, testing, research, or review.
+The task is small, localized, and does not materially benefit from independent exploration, implementation, testing, research, or review.
 
-The task MUST be delegated when at least one of the following is true:
+Examples: one-file fix, config tweak, simple question.
 
-- the task spans multiple files, modules, services, or components
-- there are two or more independent workstreams
-- repository exploration is needed before implementation
-- implementation and verification benefit from separate context
+Handle entirely in the root. Do not spawn subagents just to satisfy a delegation rule.
+
+### Tier 2 — Lightweight delegation
+
+The task is bounded but benefits from separation of concerns. One capable worker (or explorer + worker) is enough.
+
+Examples: targeted fix across two files, a well-understood feature addition, a focused refactor with clear scope.
+
+Spawn only the roles that add value. A single worker with bounded ownership is a valid orchestration. Review is optional and should be proportional to risk.
+
+### Tier 3 — Full orchestration
+
+The task is cross-cutting, risky, ambiguous, or parallelizable. Multiple independent workstreams exist and benefit from the full topology.
+
+Examples: multi-component feature, cross-service bug, repo-wide migration, work requiring independent investigation before implementation.
+
+The task MUST use Tier 3 when at least one of the following is true:
+
+- the task spans multiple independent modules, services, or components
+- there are two or more genuinely independent workstreams
 - debugging requires tracing across components
-- multiple modules or services need inspection
 - external or version-specific facts need verification
-- an independent post-change review is materially useful
+- an independent post-change review is materially useful for risk management
 - the user explicitly asks for delegation, parallelism, agents, or subagents
 
-When a task qualifies for delegation, the root MUST call `spawn_agent` before performing the delegated work itself.
+### Routing discipline
+
+Treat orchestration as adaptive routing, not a fixed pipeline. Start with the lightest tier that fits and expand only when the work demands it.
+
+When a task qualifies for delegation (Tier 2 or 3), the root MUST call `spawn_agent` before performing the delegated work itself.
 
 Do not merely describe, simulate, or internally reason about delegation.
 
@@ -63,9 +81,9 @@ If `spawn_agent` is unavailable or fails, explicitly report that failure.
 
 Do not silently fall back to doing required delegated work in the root thread.
 
-For every delegated task, spawn at least one subagent.
+Workers get bounded ownership and should finish their assignment rather than repeatedly handing work back to the root.
 
-Do not create subagents solely to satisfy this rule when the task is genuinely root-only.
+Specialists (tester, reviewer, researcher) are conditional, not mandatory pipeline stages. Invoke them when they add value, skip them when the task does not require them.
 
 ---
 
@@ -249,25 +267,45 @@ Prefer one writer per file or subsystem.
 
 ## Default coding workflow
 
-For non-trivial implementation tasks, prefer this sequence:
+Match the workflow depth to the task tier from the delegation gate.
+
+### Tier 2 workflow (lightweight)
+
+For bounded tasks that benefit from delegation but do not require the full topology:
+
+1. root assesses scope (brief exploration if needed, or spawn one explorer)
+2. spawn a single Luna worker with bounded ownership and clear acceptance criteria
+3. wait for implementation
+4. root verifies the result directly (targeted tests, diff review)
+5. present the result
+
+Skip the explorer if the root already understands the code path. Skip the reviewer for low-risk changes. A single worker finishing its assignment end-to-end is a valid and preferred orchestration for most delegated work.
+
+### Tier 3 workflow (full orchestration)
+
+For cross-cutting, risky, or multi-workstream tasks:
 
 1. spawn one or more Luna explorers if repository understanding is needed
 2. wait for exploration results
 3. root decides implementation direction
 4. spawn Luna worker or workers with bounded ownership
 5. wait for implementation
-6. spawn Luna tester
+6. spawn Luna tester when the change is non-trivial or touches critical paths
 7. wait for validation
-8. spawn Astra reviewer when an independent review is materially useful
+8. spawn Astra reviewer when an independent review is materially useful (high risk, security, architecture)
 9. resolve material findings
 10. run final verification
 11. present the result
+
+### General rules
 
 Do not spawn every role mechanically.
 
 Use only the roles that materially improve the task.
 
-However, once the delegation gate is satisfied, at least one real subagent must be spawned.
+Once the delegation gate places a task in Tier 2 or 3, at least one real subagent must be spawned.
+
+Review should be proportional to risk rather than automatically invoking the full topology.
 
 ---
 
