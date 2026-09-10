@@ -50,6 +50,52 @@ function Read-Confirmation {
     }
 }
 
+function Read-Plan {
+    [Console]::WriteLine('Codex plan:')
+    [Console]::WriteLine('  1) Pro  - GPT-6 Astra orchestrates, GPT-5.6 Luna executes, GPT-6 Astra reviews')
+    [Console]::WriteLine('  2) Plus - GPT-5.6 Luna (max reasoning) orchestrates, GPT-5.6 Luna executes, GPT-6 Astra reviews')
+
+    while ($true) {
+        [Console]::Write('Select plan [1/2] (default 1): ')
+        $answer = [Console]::In.ReadLine()
+        if ($null -eq $answer) {
+            throw 'Input ended before setup was complete.'
+        }
+
+        switch ($answer.Trim().ToLowerInvariant()) {
+            '1' { return 'pro' }
+            'pro' { return 'pro' }
+            '' { return 'pro' }
+            '2' { return 'plus' }
+            'plus' { return 'plus' }
+            default { [Console]::WriteLine('Please answer 1 (Pro) or 2 (Plus).') }
+        }
+    }
+}
+
+# Build the .codex component for the selected plan in a temporary directory:
+# config.plus.toml is never installed as-is; on Plus it becomes config.toml.
+function New-StagedCodex {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Plan,
+
+        [Parameter(Mandatory)]
+        [string]$StagingDirectory
+    )
+
+    $stagedCodex = Join-Path $StagingDirectory '.codex'
+    Copy-Item -LiteralPath (Join-Path $scriptDir '.codex') -Destination $stagedCodex -Recurse -Force
+    $plusConfig = Join-Path $stagedCodex 'config.plus.toml'
+    if ($Plan -eq 'plus') {
+        Move-Item -LiteralPath $plusConfig -Destination (Join-Path $stagedCodex 'config.toml') -Force
+    }
+    else {
+        Remove-Item -LiteralPath $plusConfig -Force -ErrorAction SilentlyContinue
+    }
+    return $stagedCodex
+}
+
 function Copy-DirectoryContents {
     param(
         [Parameter(Mandatory)]
@@ -188,10 +234,15 @@ function Install-Component {
         [string]$Name,
 
         [Parameter(Mandatory)]
-        [string]$TargetDirectory
+        [string]$TargetDirectory,
+
+        [string]$SourcePath
     )
 
-    $sourcePath = Join-Path $scriptDir $Name
+    if ([string]::IsNullOrEmpty($SourcePath)) {
+        $SourcePath = Join-Path $scriptDir $Name
+    }
+    $sourcePath = $SourcePath
     $destinationPath = Join-Path $TargetDirectory $Name
     $sourceItem = Get-Item -LiteralPath $sourcePath -Force -ErrorAction SilentlyContinue
     if ($null -eq $sourceItem) {
@@ -268,10 +319,23 @@ try {
         throw 'Target repository must be different from the setup source directory.'
     }
 
+    $plan = Read-Plan
+    $stagingDirectory = Join-Path ([IO.Path]::GetTempPath()) ("astra-setup-" + [Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $stagingDirectory | Out-Null
+    $stagedCodex = New-StagedCodex -Plan $plan -StagingDirectory $stagingDirectory
+
     $installed = 0
     foreach ($component in '.codex', '.agents', 'AGENTS.md') {
         if (Read-Confirmation -Prompt "Install ${component}?" -DefaultYes $true) {
             if (Install-Component -Name $component -TargetDirectory $targetDirectory) {
+        if (Read-Confirmation -Prompt "Install $component?" -DefaultYes $true) {
+            $result = if ($component -eq '.codex') {
+                Install-Component -Name $component -TargetDirectory $targetDirectory -SourcePath $stagedCodex
+            }
+            else {
+                Install-Component -Name $component -TargetDirectory $targetDirectory
+            }
+            if ($result) {
                 $installed++
             }
         }
@@ -281,9 +345,15 @@ try {
     }
 
     [Console]::WriteLine()
-    [Console]::WriteLine("Setup complete. $installed component(s) installed in $targetDirectory.")
+    [Console]::WriteLine("Setup complete. $installed component(s) installed in $targetDirectory (plan: $plan).")
+    [Console]::WriteLine('See guides/ for optional Codex model and Fast-mode configurations.')
 }
 catch {
     [Console]::Error.WriteLine("Setup cancelled: $($_.Exception.Message)")
     exit 1
+}
+finally {
+    if ((Test-Path -LiteralPath variable:stagingDirectory) -and (Test-Path -LiteralPath $stagingDirectory)) {
+        Remove-Item -LiteralPath $stagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }

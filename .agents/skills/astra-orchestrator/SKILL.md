@@ -15,7 +15,7 @@ Delegate bounded execution work to specialized subagents, then have the root int
 
 The expected default topology is:
 
-- root: GPT-6 Astra
+- root: GPT-6 Astra (Pro plan) or GPT-5.6 Luna at max reasoning (Plus plan)
 - explorer: GPT-5.6 Luna
 - worker: GPT-5.6 Luna
 - tester: GPT-5.6 Luna
@@ -103,7 +103,7 @@ When spawning agents, use these models by default:
 - researcher: `gpt-5.6-luna`
 - reviewer: `gpt-6-astra`
 
-The root remains `gpt-6-astra`.
+The root keeps the model configured in `config.toml`: `gpt-6-astra` on the Pro plan, `gpt-5.6-luna` at max reasoning on the Plus plan. Do not change the root model from within a session.
 
 For every delegated task:
 

@@ -14,7 +14,7 @@
 
 # Root / orchestrator
 model = "gpt-6-astra"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 
 # Safe interactive defaults. Change if your workflow needs otherwise.
 approval_policy = "on-request"
@@ -25,8 +25,9 @@ enabled = true
 
 # Number of child agent threads Codex may keep open concurrently.
 # Start with 4-6. Increase only when the work is genuinely parallel.
-max_concurrent_threads_per_session = 6
+max_concurrent_threads_per_session = 4
 
 # Default for any spawned subagent that does not explicitly choose a model.
+# Plan defaults: Pro uses max Luna reasoning; Plus uses medium Luna reasoning.
 default_subagent_model = "gpt-5.6-luna"
-default_subagent_reasoning_effort = "medium"
+default_subagent_reasoning_effort = "max"

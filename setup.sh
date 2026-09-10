@@ -117,9 +117,48 @@ merge_conflicts() {
     done
 }
 
+select_plan() {
+    printf '%s\n' 'Codex plan:'
+    printf '%s\n' '  1) Pro  - GPT-6 Astra orchestrates, GPT-5.6 Luna executes, GPT-6 Astra reviews'
+    printf '%s\n' '  2) Plus - GPT-5.6 Luna (max reasoning) orchestrates, GPT-5.6 Luna executes, GPT-6 Astra reviews'
+
+    while :; do
+        printf '%s' 'Select plan [1/2] (default 1): '
+        if ! IFS= read -r answer; then
+            printf '\nSetup cancelled: input ended before setup was complete.\n' >&2
+            exit 1
+        fi
+
+        case "$answer" in
+            1|pro|PRO|Pro|'') plan=pro; return ;;
+            2|plus|PLUS|Plus) plan=plus; return ;;
+            *) printf '%s\n' 'Please answer 1 (Pro) or 2 (Plus).' ;;
+        esac
+    done
+}
+
+# Build the .codex component for the selected plan in a temporary directory:
+# config.plus.toml is never installed as-is; on Plus it becomes config.toml.
+stage_codex() {
+    staging_dir=$(mktemp -d)
+    cp -R "$script_dir/.codex" "$staging_dir/.codex"
+    if [ "$plan" = plus ]; then
+        mv "$staging_dir/.codex/config.plus.toml" "$staging_dir/.codex/config.toml"
+    else
+        rm -f "$staging_dir/.codex/config.plus.toml"
+    fi
+    staged_codex=$staging_dir/.codex
+}
+
+cleanup_staging() {
+    if [ -n "${staging_dir:-}" ] && [ -d "$staging_dir" ]; then
+        rm -rf "$staging_dir"
+    fi
+}
+
 copy_component() {
     name=$1
-    source_path=$script_dir/$name
+    source_path=${2:-$script_dir/$name}
     destination_path=$target_dir/$name
     component_installed=no
 
@@ -174,10 +213,20 @@ copy_component() {
     component_installed=yes
 }
 
+plan=pro
+staging_dir=
+trap cleanup_staging EXIT
+select_plan
+stage_codex
+
 installed=0
 for component in .codex .agents AGENTS.md; do
     if confirm "Install $component?" yes; then
-        copy_component "$component"
+        if [ "$component" = .codex ]; then
+            copy_component "$component" "$staged_codex"
+        else
+            copy_component "$component"
+        fi
         if [ "$component_installed" = yes ]; then
             installed=$((installed + 1))
         fi
@@ -186,4 +235,5 @@ for component in .codex .agents AGENTS.md; do
     fi
 done
 
-printf '\nSetup complete. %s component(s) installed in %s.\n' "$installed" "$target_dir"
+printf '\nSetup complete. %s component(s) installed in %s (plan: %s).\n' "$installed" "$target_dir" "$plan"
+printf '%s\n' 'See guides/ for optional Codex model and Fast-mode configurations.'
