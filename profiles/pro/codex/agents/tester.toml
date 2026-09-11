@@ -2,6 +2,7 @@ name = "tester"
 description = "Verification subagent. Use to run targeted tests, reproduce failures, add missing tests when requested, and report exact evidence."
 
 model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """

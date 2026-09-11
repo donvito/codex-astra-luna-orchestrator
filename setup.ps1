@@ -73,29 +73,6 @@ function Read-Plan {
     }
 }
 
-# Build the .codex component for the selected plan in a temporary directory:
-# config.plus.toml is never installed as-is; on Plus it becomes config.toml.
-function New-StagedCodex {
-    param(
-        [Parameter(Mandatory)]
-        [string]$Plan,
-
-        [Parameter(Mandatory)]
-        [string]$StagingDirectory
-    )
-
-    $stagedCodex = Join-Path $StagingDirectory '.codex'
-    Copy-Item -LiteralPath (Join-Path $scriptDir '.codex') -Destination $stagedCodex -Recurse -Force
-    $plusConfig = Join-Path $stagedCodex 'config.plus.toml'
-    if ($Plan -eq 'plus') {
-        Move-Item -LiteralPath $plusConfig -Destination (Join-Path $stagedCodex 'config.toml') -Force
-    }
-    else {
-        Remove-Item -LiteralPath $plusConfig -Force -ErrorAction SilentlyContinue
-    }
-    return $stagedCodex
-}
-
 function Copy-DirectoryContents {
     param(
         [Parameter(Mandatory)]
@@ -272,6 +249,27 @@ function Install-Component {
             return $false
         }
 
+        if ($Name -eq 'AGENTS.md') {
+            $instructions = [IO.File]::ReadAllText($sourcePath)
+            $existing = [IO.File]::ReadAllText($destinationPath)
+            $normalizedInstructions = $instructions.Replace("`r`n", "`n").TrimEnd("`n")
+            if ($existing.Replace("`r`n", "`n").Contains($normalizedInstructions)) {
+                [Console]::WriteLine("Skipped ${Name}: instructions already present.")
+                return $false
+            }
+            $reader = [IO.StreamReader]::new($destinationPath, [Text.Encoding]::UTF8, $true)
+            try {
+                $null = $reader.ReadToEnd()
+                $encoding = $reader.CurrentEncoding
+            }
+            finally {
+                $reader.Dispose()
+            }
+            [IO.File]::AppendAllText($destinationPath, "`n`n" + $instructions, $encoding)
+            [Console]::WriteLine("Appended instructions to ${Name}. Existing contents preserved.")
+            return $true
+        }
+
         Show-OverwriteWarning -Source $sourceItem -Destination $destinationPath -Name $Name
 
         if (-not (Read-Confirmation -Prompt "Update ${Name}? New files will be added; only paths listed above will be replaced." -DefaultYes $false)) {
@@ -320,15 +318,16 @@ try {
     }
 
     $plan = Read-Plan
-    $stagingDirectory = Join-Path ([IO.Path]::GetTempPath()) ("astra-setup-" + [Guid]::NewGuid().ToString('N'))
-    New-Item -ItemType Directory -Path $stagingDirectory | Out-Null
-    $stagedCodex = New-StagedCodex -Plan $plan -StagingDirectory $stagingDirectory
+    $profileDirectory = Join-Path $scriptDir "profiles/$plan"
 
     $installed = 0
     foreach ($component in '.codex', '.agents', 'AGENTS.md') {
         if (Read-Confirmation -Prompt "Install $component?" -DefaultYes $true) {
             $result = if ($component -eq '.codex') {
-                Install-Component -Name $component -TargetDirectory $targetDirectory -SourcePath $stagedCodex
+                Install-Component -Name $component -TargetDirectory $targetDirectory -SourcePath (Join-Path $profileDirectory "codex")
+            }
+            elseif ($component -eq '.agents') {
+                Install-Component -Name $component -TargetDirectory $targetDirectory -SourcePath (Join-Path $profileDirectory "agents")
             }
             else {
                 Install-Component -Name $component -TargetDirectory $targetDirectory
@@ -349,9 +348,4 @@ try {
 catch {
     [Console]::Error.WriteLine("Setup cancelled: $($_.Exception.Message)")
     exit 1
-}
-finally {
-    if ((Test-Path -LiteralPath variable:stagingDirectory) -and (Test-Path -LiteralPath $stagingDirectory)) {
-        Remove-Item -LiteralPath $stagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
-    }
 }

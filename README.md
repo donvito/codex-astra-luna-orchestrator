@@ -8,19 +8,13 @@ The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium r
 
 ```text
 .
-├── .codex/
-│   ├── config.toml         (Pro: Astra root)
-│   ├── config.plus.toml    (Plus: Luna max root; installed as config.toml)
-│   └── agents/
-│       ├── explorer.toml
-│       ├── worker.toml
-│       ├── tester.toml
-│       ├── reviewer.toml
-│       └── researcher.toml
-├── .agents/
-│   └── skills/
-│       └── astra-orchestrator/
-│           └── SKILL.md
+├── profiles/
+│   ├── pro/
+│   │   ├── codex/           (config.toml and agents/*.toml)
+│   │   └── agents/          (skills/astra-orchestrator/SKILL.md)
+│   └── plus/
+│       ├── codex/           (config.toml and agents/*.toml)
+│       └── agents/          (skills/astra-orchestrator/SKILL.md)
 ├── guides/
 │   ├── fast-iteration.md
 │   ├── complex-repo-work.md
@@ -46,7 +40,7 @@ The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium r
 | Independent reviewer | GPT-6 Astra — low | GPT-6 Astra — low |
 | Concurrent subagent limit | 4 | 4 |
 
-### Pro — `.codex/config.toml`
+### Pro — `profiles/pro/codex/config.toml`
 
 ```toml
 model = "gpt-6-astra"
@@ -62,7 +56,7 @@ default_subagent_model = "gpt-5.6-luna"
 default_subagent_reasoning_effort = "max"
 ```
 
-### Plus — `.codex/config.plus.toml`
+### Plus — `profiles/plus/codex/config.toml`
 
 ```toml
 model = "gpt-5.6-luna"
@@ -78,14 +72,15 @@ default_subagent_model = "gpt-5.6-luna"
 default_subagent_reasoning_effort = "medium"
 ```
 
-The installer writes whichever one matches your plan to `.codex/config.toml`
-in the target repository; `config.plus.toml` itself is never installed.
+The installer copies `profiles/<plan>/codex` to `.codex` and
+`profiles/<plan>/agents` to `.agents` in the target repository. Each profile
+is ready to copy, with no configuration rewriting during setup.
 
 Each role file is explicitly pinned to its intended model: Luna for explorer, worker, tester, and researcher; Astra for reviewer. This means changing only `default_subagent_model` will affect generic spawned agents, but not the named roles.
 
-The four Luna role files omit `model_reasoning_effort`, so they use the selected plan's `default_subagent_reasoning_effort` unless the spawn request explicitly sets an effort. The reviewer keeps its explicit `low` effort. See the [official subagent configuration documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents) for precedence rules.
+The four Luna role files explicitly set `model_reasoning_effort = "max"` in the Pro profile and `"medium"` in the Plus profile. The reviewer keeps its explicit `low` effort in both.
 
-When updating an existing installation, update the four Luna role files along with `config.toml`; an older role file pinned to `medium` will override Pro's new `max` default.
+When updating an existing installation, copy the role files along with `config.toml` from the selected profile. Replace `<plan>` below with `pro` or `plus`.
 
 If you want all named roles, including the reviewer, to follow the `[agents]` defaults, remove both the `model` and `model_reasoning_effort` overrides from their role files.
 
@@ -148,9 +143,12 @@ effort on both plans.
 
 The installer then asks whether to install each component:
 
-- `.codex` contains the root configuration and agent role profiles.
-- `.agents` contains the `astra-orchestrator` skill.
-- `AGENTS.md` gives Codex the project-level orchestration instructions.
+- `profiles/<plan>/codex` contains the root configuration and agent role profiles, installed as `.codex`.
+- `profiles/<plan>/agents` contains the `astra-orchestrator` skill, installed as `.agents`.
+- `AGENTS.md` gives Codex the project-level orchestration instructions. If it
+  already exists, setup appends the instructions and preserves its contents.
+  Re-running setup skips the append when the same instructions are already
+  present. Symbolic links and incompatible targets are skipped.
 
 Press Enter or answer `y` to install a component; answer `n` to skip it. All
 three components are selected by default.
@@ -178,19 +176,19 @@ automatically.
 
 ## Personal/global setup
 
-For agents, copy the TOML files to:
+For agents, copy the TOML files from `profiles/<plan>/codex/agents/` to:
 
 ```text
 ~/.codex/agents/
 ```
 
-For the skill, copy the skill folder to:
+For the skill, copy `profiles/<plan>/agents/skills/astra-orchestrator/` to:
 
 ```text
 ~/.agents/skills/astra-orchestrator/
 ```
 
-Merge the settings from `.codex/config.toml` (Pro) or `.codex/config.plus.toml`
+Merge the settings from `profiles/pro/codex/config.toml` (Pro) or `profiles/plus/codex/config.toml`
 (Plus) into your existing:
 
 ```text

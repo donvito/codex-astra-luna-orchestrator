@@ -21,6 +21,8 @@ tmp/
 temp/
 
 # Editor and local tooling files
+/.codex/
+/.agents/
 .idea/
 .vscode/
 *.swp

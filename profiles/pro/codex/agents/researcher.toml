@@ -2,6 +2,7 @@ name = "researcher"
 description = "Read-only technical research subagent. Use for version-specific APIs, framework behavior, external documentation, or dependency facts that should be verified."
 
 model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
 sandbox_mode = "read-only"
 
 developer_instructions = """

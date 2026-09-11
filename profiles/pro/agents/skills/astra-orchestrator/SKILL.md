@@ -1,9 +1,9 @@
 ---
 name: astra-orchestrator
-description: Orchestrate complex Codex coding work with the root agent as planner/integrator, Luna subagents for exploration, implementation, testing, and research, and an Astra reviewer. Use for multi-file features, debugging across components, repo-wide changes, parallelizable workstreams, or whenever the user asks to delegate or use subagents. Do not use for trivial one-file edits or simple questions.
+description: Orchestrate complex Codex coding work for the Pro profile with GPT-6 Astra at medium reasoning as planner/integrator, Luna subagents for exploration, implementation, testing, and research, and an Astra reviewer. Use for multi-file features, debugging across components, repo-wide changes, parallelizable workstreams, or whenever the user asks to delegate or use subagents. Do not use for trivial one-file edits or simple questions.
 ---
 
-# Astra Orchestrator
+# Astra Orchestrator — Pro Profile
 
 The user's explicit instructions take precedence over this skill.
 
@@ -15,18 +15,18 @@ Delegate bounded execution work to specialized subagents, then have the root int
 
 The expected default topology is:
 
-- root: GPT-6 Astra (Pro plan) or GPT-5.6 Luna at max reasoning (Plus plan)
-- explorer: GPT-5.6 Luna
-- worker: GPT-5.6 Luna
-- tester: GPT-5.6 Luna
-- reviewer: GPT-6 Astra
-- researcher: GPT-5.6 Luna
+- root: GPT-6 Astra at medium reasoning
+- explorer: GPT-5.6 Luna at max reasoning
+- worker: GPT-5.6 Luna at max reasoning
+- tester: GPT-5.6 Luna at max reasoning
+- reviewer: GPT-6 Astra at low reasoning
+- researcher: GPT-5.6 Luna at max reasoning
 
 Use Luna for all routine subagent execution.
 
 This is a requirement, not a preference.
 
-Only the reviewer uses Astra by default.
+The root and reviewer use Astra; routine execution subagents use Luna.
 
 Do not override a Luna subagent to a more expensive model unless the user explicitly asks for escalation or a Luna worker reports that the task requires higher-level reasoning.
 
@@ -97,13 +97,13 @@ The root must not offload architectural ownership to a subagent.
 
 When spawning agents, use these models by default:
 
-- explorer: `gpt-5.6-luna`
-- worker: `gpt-5.6-luna`
-- tester: `gpt-5.6-luna`
-- researcher: `gpt-5.6-luna`
-- reviewer: `gpt-6-astra`
+- explorer: `gpt-5.6-luna` at `max` reasoning
+- worker: `gpt-5.6-luna` at `max` reasoning
+- tester: `gpt-5.6-luna` at `max` reasoning
+- researcher: `gpt-5.6-luna` at `max` reasoning
+- reviewer: `gpt-6-astra` at `low` reasoning
 
-The root keeps the model configured in `config.toml`: `gpt-6-astra` on the Pro plan, `gpt-5.6-luna` at max reasoning on the Plus plan. Do not change the root model from within a session.
+The root keeps the Pro profile configuration from `.codex/config.toml`: GPT-6 Astra at medium reasoning. The role files in `.codex/agents/` explicitly set Luna reasoning to `max` and reviewer reasoning to `low`. Preserve those efforts when spawning agents unless the user requests a change. Do not change the root model from within a session.
 
 For every delegated task:
 

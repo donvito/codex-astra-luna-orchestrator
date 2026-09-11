@@ -63,14 +63,16 @@ If you want numbers that are comparable across configurations:
    change. Write the prompts down and reuse them verbatim.
 2. Run each task in at least two configurations:
    - Baseline: Astra root only, `[agents] enabled = false`, no skill.
-   - Orchestrated: this setup as installed.
+   - Orchestrated: the selected Pro or Plus profile as installed.
    - Optional floor: Luna root only, to see the cheapest possible run.
 3. Record for every run: per-model uncached input, cached input, output and
    reasoning tokens; number of subagents spawned; wall time; and the change
    in 5-hour and 7-day `used_percent`.
 4. Repeat each cell two or three times. Variance between runs of the same
    prompt is large enough that a single sample misleads.
-5. Note the Codex version. Caching behaviour and subagent context handling
+5. Record the profile and any overrides: Pro uses Astra `medium` with Luna
+   `max`; Plus uses Luna `max` with Luna `medium`. Both use an Astra `low`
+   reviewer. Note the Codex version. Caching behaviour and subagent context handling
    change between releases.
 
 Suggested results table:
@@ -107,7 +109,7 @@ not a benchmark.
 
 - Task: cross-component bug fix (file-watcher refresh on external rename) in
   a small TypeScript desktop app, about 16 source files and 6k lines.
-- Config: this setup as shipped. Astra root at `low`, Luna subagents at
+- Config: historical setup, before the current Pro/Plus profiles. Astra root at `low`, Luna subagents at
   `medium`, Astra reviewer at `low`.
 - Codex `0.153.4`, Plus plan, 2026-09-07.
 - Agents spawned: explorer, worker, tester, reviewer (4). Three guardian
@@ -139,8 +141,9 @@ Takeaways from this single run:
   emitting 6.9k output tokens. Orchestration overhead is mostly the root
   staying in the loop.
 - One medium-sized task consumed two thirds of a fresh Plus 5-hour window.
-  If you are on Plus, expect one or two orchestrated tasks per window, and
-  use the `routine-coding.md` preset or root-only mode for small edits.
+  This historical Astra-root run does not establish the capacity of the
+  current Plus profile. Measure fresh runs with the selected profile; use
+  the `routine-coding.md` preset or root-only mode for small edits.
 
 ## Reducing usage
 

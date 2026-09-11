@@ -137,25 +137,6 @@ select_plan() {
     done
 }
 
-# Build the .codex component for the selected plan in a temporary directory:
-# config.plus.toml is never installed as-is; on Plus it becomes config.toml.
-stage_codex() {
-    staging_dir=$(mktemp -d)
-    cp -R "$script_dir/.codex" "$staging_dir/.codex"
-    if [ "$plan" = plus ]; then
-        mv "$staging_dir/.codex/config.plus.toml" "$staging_dir/.codex/config.toml"
-    else
-        rm -f "$staging_dir/.codex/config.plus.toml"
-    fi
-    staged_codex=$staging_dir/.codex
-}
-
-cleanup_staging() {
-    if [ -n "${staging_dir:-}" ] && [ -d "$staging_dir" ]; then
-        rm -rf "$staging_dir"
-    fi
-}
-
 copy_component() {
     name=$1
     source_path=${2:-$script_dir/$name}
@@ -168,6 +149,25 @@ copy_component() {
     fi
 
     if [ -e "$destination_path" ] || [ -L "$destination_path" ]; then
+        if [ "$name" = AGENTS.md ]; then
+            if [ -L "$destination_path" ] || [ ! -f "$destination_path" ]; then
+                printf 'Skipped %s: target must be a regular file, not a symbolic link.\n' "$name" >&2
+                return 0
+            fi
+            instructions=$(cat "$source_path")
+            existing_instructions=$(cat "$destination_path")
+            case "$existing_instructions" in
+                *"$instructions"*)
+                    printf 'Skipped %s: instructions already present.\n' "$name"
+                    return 0
+                    ;;
+            esac
+            printf '\n\n' >> "$destination_path"
+            cat "$source_path" >> "$destination_path"
+            printf 'Appended instructions to %s. Existing contents preserved.\n' "$name"
+            component_installed=yes
+            return 0
+        fi
         if [ ! -L "$destination_path" ] && [ -d "$source_path" ] && [ -d "$destination_path" ]; then
             linked_path=$(find "$destination_path" -type l -print -quit)
             if [ -n "$linked_path" ]; then
@@ -214,16 +214,15 @@ copy_component() {
 }
 
 plan=pro
-staging_dir=
-trap cleanup_staging EXIT
 select_plan
-stage_codex
 
 installed=0
 for component in .codex .agents AGENTS.md; do
     if confirm "Install $component?" yes; then
         if [ "$component" = .codex ]; then
-            copy_component "$component" "$staged_codex"
+            copy_component "$component" "$script_dir/profiles/$plan/codex"
+        elif [ "$component" = .agents ]; then
+            copy_component "$component" "$script_dir/profiles/$plan/agents"
         else
             copy_component "$component"
         fi
