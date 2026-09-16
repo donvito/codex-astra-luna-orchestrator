@@ -2,7 +2,48 @@
 
 set -eu
 
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
+release_update_library=$script_dir/scripts/release-update.sh
+
+setup_offline=no
+setup_help=no
+for setup_argument in "$@"; do
+    case "$setup_argument" in
+        --offline) setup_offline=yes ;;
+        --help) setup_help=yes ;;
+        *)
+            printf 'Error: unknown argument: %s\n' "$setup_argument" >&2
+            printf '%s\n' 'Usage: setup.sh [--offline|--help]' >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [ ! -r "$release_update_library" ]; then
+    printf 'Error: release updater library is missing: %s\n' "$release_update_library" >&2
+    exit 1
+fi
+
+# shellcheck source=scripts/release-update.sh
+. "$release_update_library"
+
+if [ "$setup_help" = yes ]; then
+    release_update_usage
+    exit 0
+fi
+
+if [ "$setup_offline" != yes ] && [ "${CODEX_ORCHESTRATOR_SKIP_UPDATE_CHECK:-}" != 1 ]; then
+    if release_update_auto_check "$script_dir"; then
+        :
+    else
+        release_update_status=$?
+        printf '%s\n' 'Setup cancelled before local changes were made.' >&2
+        exit "$release_update_status"
+    fi
+    if [ "${release_update_auto_result:-continue}" = exit ]; then
+        exit 0
+    fi
+fi
 
 cat <<'BANNER'
 +---------------------------------------+
@@ -26,7 +67,7 @@ if [ -z "$target_path" ] || [ ! -d "$target_path" ]; then
     exit 1
 fi
 
-target_dir=$(CDPATH= cd -- "$target_path" && pwd -P)
+target_dir=$(CDPATH='' cd -- "$target_path" && pwd -P)
 if [ "$target_dir" = "$script_dir" ]; then
     printf 'Error: target repository must be different from the setup source directory.\n' >&2
     exit 1

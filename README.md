@@ -29,10 +29,14 @@ The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium r
 │   ├── plus-plan.md
 │   └── token-usage.md
 ├── scripts/
+│   ├── release-update.sh
 │   └── token_usage.py
 ├── AGENTS.md
 ├── setup.sh
 ├── setup.ps1
+├── update.sh
+├── update.ps1
+├── VERSION
 └── LICENSE
 ```
 
@@ -86,7 +90,7 @@ Each role file is explicitly pinned to its intended model: Luna for explorer, wo
 
 The four Luna role files explicitly set `model_reasoning_effort = "max"` in the Pro profile and `"medium"` in the Plus profile. The reviewer keeps its explicit `low` effort in both.
 
-When updating an existing installation, copy the role files along with `config.toml` from the selected profile. Replace `<plan>` below with `pro` or `plus`.
+To update an existing project from a published release, use the [release updater](#release-updates). For manual updates, copy the role files along with `config.toml` from the selected profile. Replace `<plan>` below with `pro` or `plus`.
 
 If you want all named roles, including the reviewer, to follow the `[agents]` defaults, remove both the `model` and `model_reasoning_effort` overrides from their role files.
 
@@ -181,6 +185,50 @@ See `guides/` for copy-paste model presets and the Astra + Luna topology. The
 guides are intentionally separate from the installers so you can review and
 adapt settings for your Codex version without changing a global config
 automatically.
+
+## Release updates
+
+Each run of `setup.sh` or `setup.ps1` checks GitHub for a newer stable release before starting local setup. When one is available, setup shows its version and release link and asks whether to download and run that release's installer. The answer defaults to **no**. If the check fails, local setup continues with a warning.
+
+You can also check for releases without installing anything:
+
+```sh
+./update.sh --check
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\update.ps1 -Check
+```
+
+To install or update a project using the latest published release:
+
+```sh
+./update.sh
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\update.ps1
+```
+
+The updater asks before downloading and running the release installer. Enter the existing project's path, select its profile, and choose the components to update. Existing-file replacements still require the installer's separate confirmation, which defaults to **no**. Review the listed paths before approving: selected profile files replace those paths, so merge any customizations you want to keep. Other project files are preserved, and `AGENTS.md` retains its existing append-and-deduplicate behavior.
+
+Release archives are downloaded into a temporary directory and removed afterward. The updater works from a clone or extracted source archive and leaves that source directory unchanged. A check compares the setup source's `VERSION` with the latest release; it does not track versions installed in individual projects. Running the updater explicitly lets you install the latest release even when the setup source is already current.
+
+Checks run only when setup or the updater is invoked. No background service, scheduled task, or Codex startup hook is installed. Existing installations need a copy of these new scripts once to use this flow. Personal/global installations still use the manual merge instructions below.
+
+To use only local files and skip the network check:
+
+```sh
+./setup.sh --offline
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Offline
+```
+
+The shell updater requires `curl`, `tar`, and standard POSIX utilities. Windows uses built-in PowerShell and .NET functionality. Checks use GitHub's public latest-release endpoint and require no GitHub login. A missing release, network failure, or rate limit makes an explicit update/check command fail with a diagnostic; it does not trigger installation from `main`.
+
+Maintainers: update `VERSION` to the release number (for example, `0.2.0`) before publishing the matching `v0.2.0` release. Stable tags use `vMAJOR.MINOR.PATCH` or `MAJOR.MINOR.PATCH`. GitHub's generated source archives are sufficient; no extra release assets are required.
 
 ## Personal/global setup
 

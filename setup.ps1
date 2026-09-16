@@ -1,10 +1,13 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$Offline
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = Split-Path -Parent $PSCommandPath
+$updaterScriptPath = Join-Path $scriptDir 'update.ps1'
 $banner = @'
 +---------------------------------------+
 |    _    ____ _____ ____      _        |
@@ -18,6 +21,33 @@ $banner = @'
 |          Execute with Luna.           |
 +---------------------------------------+
 '@
+
+# The updater is optional so this installer remains usable from an older
+# source archive that predates update.ps1.  -Offline and the temporary
+# process environment flag used by update.ps1 both suppress network checks.
+$updaterLoaded = $false
+if (Test-Path -LiteralPath $updaterScriptPath -PathType Leaf) {
+    try {
+        . $updaterScriptPath
+        $updaterLoaded = $true
+    }
+    catch {
+        [Console]::Error.WriteLine("Updater warning: could not load update.ps1 ($($_.Exception.Message)). Continuing with local setup.")
+    }
+}
+
+if ($updaterLoaded) {
+    try {
+        $updateAction = Invoke-SetupUpdateCheck -SourceDirectory $scriptDir -Offline:$Offline
+        if ($updateAction -eq 'Installed') {
+            return
+        }
+    }
+    catch {
+        [Console]::Error.WriteLine("Updater error: $($_.Exception.Message)")
+        exit 1
+    }
+}
 
 [Console]::WriteLine($banner)
 [Console]::WriteLine('Interactive project setup for Windows')

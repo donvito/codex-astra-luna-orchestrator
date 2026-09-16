@@ -1,0 +1,2 @@
+# Keep shell installers executable by Git Bash in Windows checkouts.
+*.sh text eol=lf
