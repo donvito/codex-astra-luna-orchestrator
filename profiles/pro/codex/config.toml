@@ -16,6 +16,16 @@
 model = "gpt-6-astra"
 model_reasoning_effort = "medium"
 
+# Ask Codex to use the documented 1M-class context window (1,050,000 tokens)
+# for the GPT-5.6/6 models used here (Luna, Terra, Sol, Astra, Daybreak),
+# with automatic compaction kept below the working range. The catalog
+# override file keeps the larger window from being reset when Codex
+# refreshes model metadata. See README, "Model context windows".
+model_context_window = 1_050_000
+model_auto_compact_token_limit = 900_000
+model_auto_compact_token_limit_scope = "total"
+model_catalog_json = "~/.codex/models-1m.json"
+
 # Safe interactive defaults. Change if your workflow needs otherwise.
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"

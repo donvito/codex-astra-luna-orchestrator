@@ -90,6 +90,49 @@ When updating an existing installation, copy the role files along with `config.t
 
 If you want all named roles, including the reviewer, to follow the `[agents]` defaults, remove both the `model` and `model_reasoning_effort` overrides from their role files.
 
+## Model context windows
+
+The GPT-5.6/6 models used here (Luna, Terra, Sol, Astra, Daybreak) are documented with a 1,050,000-token context window and 128,000 maximum output tokens, but the model metadata Codex fetches can advertise a smaller default ceiling. The `model_context_window` setting asks Codex to use the documented range. It does not remove a smaller ceiling from the active model metadata, and a configured value is not evidence that the client accepted it. These lines keep automatic compaction below the intended working range:
+
+```toml
+model_context_window = 1_050_000
+model_auto_compact_token_limit = 900_000
+model_auto_compact_token_limit_scope = "total"
+model_catalog_json = "~/.codex/models-1m.json"
+```
+
+All four profiles ship with these lines next to the root model setting. The extra `model_catalog_json` line points Codex at a separate catalog file. Use a separate file because the normal cache (`~/.codex/models_cache.json`) refreshes; keep the cache as the input and write the override elsewhere. If your Codex build does not expand `~`, give it the absolute path to the resulting file.
+
+Generate the override from the current cache:
+
+```bash
+jq '
+  .models |= map(
+    if .slug == "gpt-5.6-luna"
+    or .slug == "gpt-5.6-terra"
+    or .slug == "gpt-5.6-sol"
+    or .slug == "gpt-6-astra"
+    or .slug == "gpt-daybreak-blue-latest"
+    then
+      .context_window = 1050000 |
+      .max_context_window = 1050000
+    else . end
+  ) | {models}
+' ~/.codex/models_cache.json > ~/.codex/models-1m.json
+```
+
+The command preserves the current catalog entries, changes the two context fields for the five slugs, and removes cache bookkeeping that Codex does not need in the override. Restart Codex, then inspect the active entry:
+
+```bash
+codex debug models | jq '
+  .models[]
+  | select(.slug == "gpt-5.6-sol")
+  | {context_window, max_context_window, effective_context_window_percent}
+'
+```
+
+The target result is `1050000` for both context fields and `95` for the effective percentage. Codex applies that reserve for system prompts, tool overhead, and model output; a 1,050,000 raw window therefore gives a 997,500-token effective context limit. Swap the slug to check Luna, Terra, Astra, and Daybreak the same way.
+
 ## Project setup
 
 Clone this repository:
