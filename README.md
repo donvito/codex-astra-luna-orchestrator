@@ -205,6 +205,20 @@ Merge the settings from `profiles/pro/codex/config.toml` (Pro) or `profiles/plus
 
 Do not blindly overwrite your existing global config if you already have MCP servers, providers, permissions, or other settings.
 
+## Installable setup skill
+
+The repository also provides an optional `astra-luna-setup` Codex skill for
+preparing this project-scoped setup from another repository. Install the skill
+with:
+
+```bash
+npx skills add https://github.com/donvito/codex-astra-luna-orchestrator --skill astra-luna-setup
+```
+
+Then open the target repository in Codex and invoke `$astra-luna-setup`. The
+skill keeps the configuration project-local, checks existing files before
+running the installer, and does not modify global Codex settings.
+
 ## Using the skill
 
 Codex may select the skill automatically when the task matches its description.
