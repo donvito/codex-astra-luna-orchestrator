@@ -15,18 +15,18 @@ For a global setup, merge `profiles/plus/codex/config.toml` into:
 
 ```toml
 # Root
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "medium"
 ```
 
 Subagents keep their pinned models from `.codex/agents/*.toml`. Explorer,
-worker, tester, and researcher explicitly set `model = "gpt-5.6-luna"` and
+worker, tester, and researcher explicitly set `model = "gpt-6-luna"` and
 `model_reasoning_effort = "medium"`. The reviewer stays on GPT-6 Astra
 on the Plus plan too: it is a single, read-only, `low`-effort thread, and it
 gives you an independent review by a different model than the one that

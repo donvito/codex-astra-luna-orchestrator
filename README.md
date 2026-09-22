@@ -1,8 +1,8 @@
 # Codex Astra Orchestrator + Luna Subagents
 
-A configurable Codex setup where GPT-6 Astra is the root/orchestrator and reviewer, while GPT-5.6 Luna is the default and pinned model for execution subagents.
+A configurable Codex setup where GPT-6 Astra is the root/orchestrator and reviewer, while GPT-6 Luna is the default and pinned model for execution subagents.
 
-The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium reasoning to orchestrate and GPT-5.6 Luna at max reasoning for execution subagents. Plus uses GPT-5.6 Luna at max reasoning to orchestrate and medium reasoning for execution subagents. Both plans retain the separate GPT-6 Astra reviewer at low reasoning.
+The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium reasoning to orchestrate and GPT-6 Luna at max reasoning for execution subagents. Plus uses GPT-6 Luna at max reasoning to orchestrate and medium reasoning for execution subagents. Both plans retain the separate GPT-6 Astra reviewer at low reasoning.
 
 ## Layout
 
@@ -40,9 +40,9 @@ The installer asks which Codex plan you are on. Pro uses GPT-6 Astra at medium r
 
 | Role or setting | Plus | Pro | plus-max-2-subagents | pro-max-2-subagents |
 |---|---|---|---|---|
-| Orchestrator | GPT-5.6 Luna — max | GPT-6 Astra — medium | GPT-5.6 Luna — max | GPT-6 Astra — medium |
-| Explorer, worker, tester, researcher | GPT-5.6 Luna — medium | GPT-5.6 Luna — max | GPT-5.6 Luna — medium | GPT-5.6 Luna — max |
-| Default subagent | GPT-5.6 Luna — medium | GPT-5.6 Luna — max | GPT-5.6 Luna — medium | GPT-5.6 Luna — max |
+| Orchestrator | GPT-6 Luna — max | GPT-6 Astra — medium | GPT-6 Luna — max | GPT-6 Astra — medium |
+| Explorer, worker, tester, researcher | GPT-6 Luna — medium | GPT-6 Luna — max | GPT-6 Luna — medium | GPT-6 Luna — max |
+| Default subagent | GPT-6 Luna — medium | GPT-6 Luna — max | GPT-6 Luna — medium | GPT-6 Luna — max |
 | Independent reviewer | GPT-6 Astra — low | GPT-6 Astra — low | GPT-6 Astra — low | GPT-6 Astra — low |
 | Concurrent subagent limit | 4 | 4 | 2 | 2 |
 
@@ -58,14 +58,14 @@ sandbox_mode = "workspace-write"
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "max"
 ```
 
 ### Plus — `profiles/plus/codex/config.toml`
 
 ```toml
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 
 approval_policy = "on-request"
@@ -74,7 +74,7 @@ sandbox_mode = "workspace-write"
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "medium"
 ```
 
@@ -137,10 +137,10 @@ Next, choose your Codex plan:
 
 ```text
 Choose Profile to install
-  1) Pro  - GPT-6 Astra (medium) orchestrates, GPT-5.6 Luna (max) executes, GPT-6 Astra (low) reviews
-  2) Plus - GPT-5.6 Luna (max) orchestrates, GPT-5.6 Luna (medium) executes, GPT-6 Astra (low) reviews
-  3) Pro (max 2 subagents) - GPT-6 Astra (medium) orchestrates, GPT-5.6 Luna (max) executes, GPT-6 Astra (low) reviews
-  4) Plus (max 2 subagents) - GPT-5.6 Luna (max) orchestrates, GPT-5.6 Luna (medium) executes, GPT-6 Astra (low) reviews
+  1) Pro  - GPT-6 Astra (medium) orchestrates, GPT-6 Luna (max) executes, GPT-6 Astra (low) reviews
+  2) Plus - GPT-6 Luna (max) orchestrates, GPT-6 Luna (medium) executes, GPT-6 Astra (low) reviews
+  3) Pro (max 2 subagents) - GPT-6 Astra (medium) orchestrates, GPT-6 Luna (max) executes, GPT-6 Astra (low) reviews
+  4) Plus (max 2 subagents) - GPT-6 Luna (max) orchestrates, GPT-6 Luna (medium) executes, GPT-6 Astra (low) reviews
 Select plan [1-4] (default 1):
 ```
 
@@ -290,7 +290,7 @@ manual or global setup see [`guides/plus-plan.md`](guides/plus-plan.md):
 
 ```toml
 # Root
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 ```
 

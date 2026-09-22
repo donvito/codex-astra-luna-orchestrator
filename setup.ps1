@@ -52,10 +52,10 @@ function Read-Confirmation {
 
 function Read-Plan {
     [Console]::WriteLine('Choose Profile to install')
-    [Console]::WriteLine('  1) Pro  - GPT-6 Astra (medium) orchestrates, GPT-5.6 Luna (max) executes, GPT-6 Astra (low) reviews')
-    [Console]::WriteLine('  2) Plus - GPT-5.6 Luna (max) orchestrates, GPT-5.6 Luna (medium) executes, GPT-6 Astra (low) reviews')
-    [Console]::WriteLine('  3) Pro (max 2 subagents) - GPT-6 Astra (medium) orchestrates, GPT-5.6 Luna (max) executes, GPT-6 Astra (low) reviews')
-    [Console]::WriteLine('  4) Plus (max 2 subagents) - GPT-5.6 Luna (max) orchestrates, GPT-5.6 Luna (medium) executes, GPT-6 Astra (low) reviews')
+    [Console]::WriteLine('  1) Pro  - GPT-6 Astra (medium) orchestrates, GPT-6 Luna (max) executes, GPT-6 Astra (low) reviews')
+    [Console]::WriteLine('  2) Plus - GPT-6 Luna (max) orchestrates, GPT-6 Luna (medium) executes, GPT-6 Astra (low) reviews')
+    [Console]::WriteLine('  3) Pro (max 2 subagents) - GPT-6 Astra (medium) orchestrates, GPT-6 Luna (max) executes, GPT-6 Astra (low) reviews')
+    [Console]::WriteLine('  4) Plus (max 2 subagents) - GPT-6 Luna (max) orchestrates, GPT-6 Luna (medium) executes, GPT-6 Astra (low) reviews')
 
     while ($true) {
         [Console]::Write('Select plan [1-4] (default 1): ')

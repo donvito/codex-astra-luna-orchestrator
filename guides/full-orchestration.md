@@ -28,7 +28,7 @@ model_reasoning_effort = "medium"
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "max"
 ```
 
@@ -37,7 +37,7 @@ For the named roles, use these model settings in the corresponding files under
 
 ```toml
 # explorer.toml, worker.toml, tester.toml, researcher.toml
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 ```
 

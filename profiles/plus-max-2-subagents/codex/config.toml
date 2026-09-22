@@ -1,6 +1,6 @@
 # Codex: Luna orchestrator + Luna subagents (Plus plan)
 #
-# Variant of config.toml for Codex Plus users. The root runs on GPT-5.6 Luna
+# Variant of config.toml for Codex Plus users. The root runs on GPT-6 Luna
 # at maximum reasoning instead of GPT-6 Astra, so the largest thread in an
 # orchestrated session stays on the cheaper model. The reviewer role in
 # agents/reviewer.toml is still pinned to Astra for an independent review.
@@ -16,7 +16,7 @@
 #   agents.max_concurrent_threads_per_session
 
 # Root / orchestrator
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 
 # Safe interactive defaults. Change if your workflow needs otherwise.
@@ -31,5 +31,5 @@ enabled = true
 max_concurrent_threads_per_session = 2
 
 # Default for any spawned subagent that does not explicitly choose a model.
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "medium"
