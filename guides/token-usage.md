@@ -120,14 +120,14 @@ not a benchmark.
 | Thread | Role | Model / effort | Responses | Uncached in | Cached in | Output | Reasoning | Total | Duration |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|
 | `01a079f2` | root | gpt-6-astra / low | 83 | 118,590 | 4,668,928 | 6,860 | 900 | 4,794,378 | 13m49s |
-| `01a079f4` | explorer | gpt-6-luna / medium | 11 | 50,574 | 538,880 | 2,701 | 727 | 592,155 | 1m34s |
-| `01a079f5` | tester | gpt-6-luna / medium | 27 | 56,318 | 1,313,024 | 5,329 | 1,918 | 1,374,671 | 11m05s |
-| `01a079f5` | worker | gpt-6-luna / medium | 34 | 67,089 | 1,842,688 | 8,868 | 1,599 | 1,918,645 | 7m12s |
+| `01a079f4` | explorer | gpt-5.6-luna / medium | 11 | 50,574 | 538,880 | 2,701 | 727 | 592,155 | 1m34s |
+| `01a079f5` | tester | gpt-5.6-luna / medium | 27 | 56,318 | 1,313,024 | 5,329 | 1,918 | 1,374,671 | 11m05s |
+| `01a079f5` | worker | gpt-5.6-luna / medium | 34 | 67,089 | 1,842,688 | 8,868 | 1,599 | 1,918,645 | 7m12s |
 | `01a079fa` | reviewer | gpt-6-astra / low | 16 | 47,797 | 588,928 | 2,214 | 172 | 638,939 | 3m35s |
 
 | Model | Threads | Responses | Uncached in | Cached in | Output | Reasoning | Total |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| gpt-6-luna | 3 | 72 | 173,981 | 3,694,592 | 16,898 | 4,244 | 3,885,471 |
+| gpt-5.6-luna | 3 | 72 | 173,981 | 3,694,592 | 16,898 | 4,244 | 3,885,471 |
 | gpt-6-astra | 2 | 99 | 166,387 | 5,257,856 | 9,074 | 1,072 | 5,433,317 |
 | all | 5 | 171 | 340,368 | 8,952,448 | 25,972 | 5,316 | 9,318,788 |
 
